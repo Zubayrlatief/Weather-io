@@ -21,28 +21,29 @@
     <table class="mb-4">
       <tbody>
         <tr>
-          <th>sealvl</th>
-          <td>100</td>
+          <th>Sea Level</th>
+          <td v-if="sea_level > 0">{{ sea_level }}</td>
+          <td v-else>Null</td>
         </tr> 
         
         <tr>
-          <th>sealvl</th>
-          <td>100</td>
+          <th>Humidity</th>
+          <td>{{ humidity }}</td>
         </tr>
         
         <tr>
-          <th>sealvl</th>
-          <td>100</td>
+          <th>Wind Speed</th>
+          <td>{{ wind }}</td>
         </tr>
         
       </tbody>
     </table>
 
-    <DaysWeather></DaysWeather>
+    <DaysWeather :cityname="cityname"></DaysWeather>
 
     <div id="div_Form" class="d-flex m-3 justify-content-center">
       <form action=""></form>
-      <input type="button" value="Change Location" class="btn change-btn btn-primary">
+      <input type="button" value="Change Location" @click="changeLocation" class="btn change-btn btn-dark">
     </div>
     </div>
 
@@ -64,14 +65,24 @@ export default {
   },
   data() {
     return {
+      cityname: this.cityname,
       tempreture: null,
       description: null,
       iconUrl: null,
       date: null,
       time: null,
       name: null,
+      sea_level: null,
+      wind: null,
+      humidity: null,
+      country: null,
       monthNames: ["January", "Febuary", "March", "April", "May",  "June",  "July", "August", "September",  "October", "November", "December"],
     };
+  },
+  methods: {
+    changeLocation(){
+      window.location.reload();
+    }
   },
   async created() {
     try {
@@ -80,6 +91,10 @@ export default {
       console.log(weatherData);
       this.tempreture = Math.round(weatherData.main.temp);
       this.description = weatherData.weather[0].description;
+      this.wind = weatherData.wind.speed;
+      this.sea_level = weatherData.main.sea_level;
+      this.country = weatherData.sys.country;
+      this.humidity = weatherData.main.humidity;
       this.iconUrl = `https://openweathermap.org/img/wn/${weatherData.weather[0].icon}.png`;
       const d = new Date();
       this.date = d.getDate() + '-' + this.monthNames[d.getMonth()] + '-' + d.getFullYear();

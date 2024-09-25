@@ -1,37 +1,78 @@
 <template>
-  <div class="days-tab text-center">
-    <div class="loading">Loading..</div>
-    <ul class="p-0">
-        <li class="li_active">
-            <div class="py-3">icon</div>
-            <div class="py-3">day</div>
-            <div class="py-3">12oc</div>
+    <div class="days-tab text-center">
+      <div v-if="loading" class="loading">Loading..</div>
+      <ul v-if="!loading" class="p-0">
+        <li v-for="(day, index) in weatherData" :key="index" class="li_active">
+          <div class="py-3">
+            <img :src="day.iconUrl" alt="weather icon">
+          </div>
+          <div class="py-3">{{ getDayName(day.date) }}</div> <!-- Pass day.date here -->
+          <div class="py-3">{{ day.temperature }}°C</div>
         </li>
-        <li class="li_active">
-            <div class="py-3">icon</div>
-            <div class="py-3">day</div>
-            <div class="py-3">12oc</div>
-        </li>
-        <li class="li_active">
-            <div class="py-3">icon</div>
-            <div class="py-3">day</div>
-            <div class="py-3">12oc</div>
-        </li>
-        <li class="li_active">
-            <div class="py-3">icon</div>
-            <div class="py-3">day</div>
-            <div class="py-3">12oc</div>
-        </li>
-    </ul>
-  </div>
-</template>
-
-<script>
-export default {
-
-}
-</script>
-
+      </ul>
+    </div>
+  </template>
+  
+  <script>
+  import axios from 'axios';
+  import moment from 'moment';
+  
+  export default {
+    props: {
+      cityname: {
+        type: String,
+        default: 'New York' // Default city if cityname prop is not provided
+      }
+    },
+    data() {
+      return {
+        weatherData: [],
+        loading: true
+      };
+    },
+    mounted() {
+      this.fetchWeatherData();
+    },
+    methods: {
+      async fetchWeatherData() {
+        const apiKey = '1be0726ff1c0f86a8189955995d6e65a';
+        const city = this.cityname;
+        const apiUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=metric&appid=${apiKey}`;
+  
+        try {
+          const response = await axios.get(apiUrl);
+          const forecastData = response.data.list;
+  
+          const filteredData = forecastData
+            .map(item => {
+              return {
+                date: moment(item.dt_txt.split(' ')[0]).format('YYYY-MM-DD'), // Keep date in a standard format for logic use
+                temperature: Math.round(item.main.temp),
+                iconUrl: `https://openweathermap.org/img/wn/${item.weather[0].icon}.png`
+              };
+            })
+            .reduce((acc, item) => {
+              if (!acc.some(day => moment(day.date).isSame(item.date, 'day'))) {
+                acc.push(item);
+              }
+              return acc;
+            }, [])
+            .slice(0, 4); // Get the next 4 days
+  
+          this.weatherData = filteredData;
+          this.loading = false;
+        } catch (error) {
+          console.error('Error fetching weather data', error);
+          this.loading = false;
+        }
+      },
+      getDayName(date) { // Accept date as a parameter
+        return moment(date).format('ddd'); // Format date to show the day name
+      }
+    }
+  };
+  </script>
+  
 <style>
 .days-tab{
     width: 90%;
